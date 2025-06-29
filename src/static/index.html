@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>GenAI Researcher</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    .container { display: flex; height: 100vh; }
+    .column {
+      flex: 1;
+      padding: 40px;
+      box-sizing: border-box;
+      border-right: 1px solid #eee;
+    }
+    .column:last-child { border-right: none; }
+    textarea, input[type="text"] {
+      width: 100%;
+      margin-bottom: 16px;
+      padding: 8px;
+      font-size: 1em;
+    }
+    button { padding: 8px 16px; font-size: 1em; }
+    .result { margin-top: 24px; background: #f9f9f9; padding: 12px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="column">
+      <h2>Add URLs</h2>
+      <textarea id="urls" rows="10" placeholder="Enter URLs, one per line"></textarea>
+      <button onclick="confirmUrls()">Confirm URLs</button>
+      <div id="urlResult" class="result"></div>
+    </div>
+    <div class="column">
+      <h2>Ask a Query</h2>
+      <input type="text" id="query" placeholder="Enter your query" />
+      <button onclick="confirmQuery()">Confirm Query</button>
+      <div id="queryResult" class="result"></div>
+    </div>
+  </div>
+  <script>
+    function confirmUrls() {
+      const urls = document.getElementById('urls').value.trim().split('\n').filter(Boolean);
+      document.getElementById('urlResult').innerText = "Confirmed URLs:\n" + urls.join('\n');
+
+      fetch('http://localhost:8000/add-urls', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ urls })
+        })
+        .then(res => res.json())
+        .then(data => document.getElementById('urlResult').innerText = JSON.stringify(data, null, 2));
+
+      // TODO: Send URLs to your backend API if needed
+    }
+    function confirmQuery() {
+      const query = document.getElementById('query').value.trim();
+      document.getElementById('queryResult').innerText = "Query submitted: " + query;
+
+      fetch('http://localhost:8000/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query })
+      })
+      .then(res => res.json())
+      .then(data => {
+        // Display only the answer from result
+        if (data.result && data.result.answer) {
+          document.getElementById('queryResult').innerText = data.result.answer;
+        } else {
+          document.getElementById('queryResult').innerText = "No answer found.";
+        }
+      });
+    }
+  </script>
+</body>
+</html>
