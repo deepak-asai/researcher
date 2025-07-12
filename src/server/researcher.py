@@ -12,7 +12,7 @@ class Researcher:
         load_dotenv()
         embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
         return AstraDBVectorStore(
-            collection_name="reasearch_agent",
+            collection_name="research_agent",
             embedding=embeddings,
             api_endpoint=os.getenv("ASTRA_DB_API_ENDPOINT"),
             token=os.getenv("ASTRA_DB_APPLICATION_TOKEN"),
@@ -25,7 +25,8 @@ class Researcher:
         data = loader.load()
         text_splitter = RecursiveCharacterTextSplitter(
             separators=['\n\n', '\n', '.', ','],
-            chunk_size=1000
+            chunk_size=1000,
+            chunk_overlap=200
         )
         docs = text_splitter.split_documents(data)
         vector_store = self._get_vector_store()
@@ -34,7 +35,7 @@ class Researcher:
 
     def query(self, question: str):
         vector_store = self._get_vector_store()
-        llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.9, max_tokens=256)
+        llm = ChatOpenAI(model="gpt-3.5-turbo", temperature=0.9)
         chain = RetrievalQAWithSourcesChain.from_llm(llm=llm, retriever=vector_store.as_retriever())
         response = chain.invoke({"question": question})
         return {
